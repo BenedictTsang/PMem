@@ -307,6 +307,9 @@ const handleUndo = () => {
                 word.isParagraphBreak ? (
                   // Render paragraph breaks as vertical spacing divs
                   <div key={`para-break-${word.index}`} className="mb-6" /> // You may increase margin if desired
+                ) : word.text === '\n' || word.text === '\r\n' ? (
+                  // Render single newlines as line breaks
+                  <br key={word.index} />
                 ) : word.isPunctuation && !selectablePunctuations.has(word.text) ? (
                   // Render punctuation normally
                   <span key={word.index} className="text-gray-800">
