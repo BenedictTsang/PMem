@@ -107,11 +107,11 @@ const regex = new RegExp(
   return words;
 };
 
-export const getWordAtPosition = (words: Word[], position: number): Word | null => {
+const getWordAtPosition = (words: Word[], position: number): Word | null => {
   return words.find(word => word.index === position) || null;
 };
 
-export const toggleWordSelection = (words: Word[], index: number): Word[] => {
+const toggleWordSelection = (words: Word[], index: number): Word[] => {
   return words.map(word =>
     word.index === index && !word.isPunctuation
       ? { ...word, isMemorized: !word.isMemorized }
