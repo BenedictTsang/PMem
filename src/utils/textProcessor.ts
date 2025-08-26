@@ -62,7 +62,7 @@ export const processText = (text: string): Word[] => {
   // \s+                      => 空白字符
   //
 const regex = new RegExp(
-  `[A-Za-z]+(?:-[A-Za-z]+)*|\\d+|${wordCharPattern}|[，（）？，：！,+]|[^\\s${wordCharPattern}]|\\s+|\r\n|\n`,
+  `[A-Za-z]+(?:-[A-Za-z]+)*|\\d+|${wordCharPattern}|[.,!?;:，。？！；：""''""''()（）\\[\\]【】]|\\r\\n|\\n|[^\\s${wordCharPattern}.,!?;:，。？！；：""''""''()（）\\[\\]【】]|\\s+`,
   'g'
 );
 
