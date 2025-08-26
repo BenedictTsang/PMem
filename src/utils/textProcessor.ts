@@ -57,12 +57,12 @@ export const processText = (text: string): Word[] => {
   // [A-Za-z]+(?:-[A-Za-z]+)*  => 英文詞（支援連字號）
   // \d+                      => 連續數字
   // ${wordCharPattern}       => 单个中日韓字符
-  // [，（）？，：！,+]         => 明確匹配這些可選擇標點符號（包括加號）
+  // [.,!?;:，。？！；：""''""''()（）\\[\\]【】] => 明確匹配標點符號
   // [^\s${wordCharPattern}]   => 任何非空白且非詞字符的符號
   // \s+                      => 空白字符
   //
 const regex = new RegExp(
-  `[A-Za-z]+(?:-[A-Za-z]+)*|\\d+|${wordCharPattern}|[.,!?;:，。？！；：""''""''()（）\\[\\]【】]|\\r\\n|\\n|[^\\s${wordCharPattern}.,!?;:，。？！；：""''""''()（）\\[\\]【】]|\\s+`,
+  `\\r\\n\\r\\n|\\n\\n|[A-Za-z]+(?:-[A-Za-z]+)*|\\d+|${wordCharPattern}|[.,!?;:，。？！；：""''""''()（）\\[\\]【】]|\\r\\n|\\n|[^\\s${wordCharPattern}.,!?;:，。？！；：""''""''()（）\\[\\]【】]|\\s+`,
   'g'
 );
 
@@ -71,24 +71,35 @@ const regex = new RegExp(
 
   while ((match = regex.exec(text)) !== null) {
     const token = match[0];
-      if (token === '\n' || token === '\r\n') {
-  words.push({
-    text: '',
-    index: currentIndex,
-    isMemorized: false,
-    isPunctuation: false,
-    isParagraphBreak: true,
-  });
-} else {
-  const isPunctuation = !isActualWord(token) && token.trim() !== '' || token === '\n' || token === '\r\n';
-
-  words.push({
-    text: token,
-    index: currentIndex,
-    isMemorized: false,
-    isPunctuation,
-  });
-}
+    
+    if (token === '\n\n' || token === '\r\n\r\n') {
+      // Double newlines are paragraph breaks
+      words.push({
+        text: '',
+        index: currentIndex,
+        isMemorized: false,
+        isPunctuation: false,
+        isParagraphBreak: true,
+      });
+    } else if (token === '\n' || token === '\r\n') {
+      // Single newlines are line breaks (marked as punctuation for rendering)
+      words.push({
+        text: token,
+        index: currentIndex,
+        isMemorized: false,
+        isPunctuation: true,
+      });
+    } else {
+      // Regular tokens
+      const isPunctuation = !isActualWord(token) && token.trim() !== '';
+      
+      words.push({
+        text: token,
+        index: currentIndex,
+        isMemorized: false,
+        isPunctuation,
+      });
+    }
 
     currentIndex++;
   }
