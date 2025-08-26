@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { AppProvider } from './context/AppContext';
+import { SupabaseProvider, useSupabase } from './context/SupabaseContext';
 import SourceInspector from './components/SourceInspector/SourceInspector';
+import AuthForm from './components/Auth/AuthForm';
+import AuthStatus from './components/Auth/AuthStatus';
 import Navigation from './components/Navigation/Navigation';
 import TextInput from './components/TextInput/TextInput';
 import WordSelection from './components/WordSelection/WordSelection';
@@ -16,7 +19,26 @@ type AppState =
   | { page: 'practice'; memorizationState: MemorizationState };
 
 function AppContent() {
+  const { session, loading } = useSupabase();
   const [appState, setAppState] = useState<AppState>({ page: 'new', step: 'input' });
+
+  if (loading) {
+    return (
+      <div 
+        className="min-h-screen bg-gray-50 flex items-center justify-center"
+        style={{ fontFamily: 'Times New Roman, serif' }}
+      >
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthForm />;
+  }
 
   const handlePageChange = (page: 'new' | 'saved') => {
     if (page === 'new') {
@@ -116,6 +138,7 @@ function AppContent() {
 
   return (
     <>
+      <AuthStatus />
       <Navigation currentPage={getCurrentPage()} onPageChange={handlePageChange} />
       {renderCurrentView()}
     </>
@@ -124,10 +147,12 @@ function AppContent() {
 
 function App() {
   return (
-    <AppProvider>
-      <SourceInspector />
-      <AppContent />
-    </AppProvider>
+    <SupabaseProvider>
+      <AppProvider>
+        <SourceInspector />
+        <AppContent />
+      </AppProvider>
+    </SupabaseProvider>
   );
 }
 
