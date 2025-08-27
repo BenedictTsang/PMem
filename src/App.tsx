@@ -9,6 +9,7 @@ import TextInput from './components/TextInput/TextInput';
 import WordSelection from './components/WordSelection/WordSelection';
 import MemorizationView from './components/MemorizationView/MemorizationView';
 import SavedContent from './components/SavedContent/SavedContent';
+import AdminPanel from './components/AdminPanel/AdminPanel';
 import { Word, MemorizationState } from './types';
 
 type AppState = 
@@ -16,10 +17,11 @@ type AppState =
   | { page: 'new'; step: 'selection'; text: string; words?: Word[] }
   | { page: 'new'; step: 'memorization'; words: Word[]; selectedIndices: number[]; text: string }
   | { page: 'saved' }
+  | { page: 'admin' }
   | { page: 'practice'; memorizationState: MemorizationState };
 
 function AppContent() {
-  const { session, loading } = useSupabase();
+  const { session, loading, userRole } = useSupabase();
   const [appState, setAppState] = useState<AppState>({ page: 'new', step: 'input' });
 
   if (loading) {
@@ -40,11 +42,13 @@ function AppContent() {
     return <AuthForm />;
   }
 
-  const handlePageChange = (page: 'new' | 'saved') => {
+  const handlePageChange = (page: 'new' | 'saved' | 'admin') => {
     if (page === 'new') {
       setAppState({ page: 'new', step: 'input' });
-    } else {
+    } else if (page === 'saved') {
       setAppState({ page: 'saved' });
+    } else if (page === 'admin') {
+      setAppState({ page: 'admin' });
     }
   };
 
@@ -119,6 +123,8 @@ function AppContent() {
         break;
       case 'saved':
         return <SavedContent onLoadContent={handleLoadContent} />;
+      case 'admin':
+        return <AdminPanel />;
       case 'practice':
         return (
           <MemorizationView
@@ -132,14 +138,21 @@ function AppContent() {
     }
   };
 
-  const getCurrentPage = (): 'new' | 'saved' => {
-    return appState.page === 'practice' ? 'saved' : appState.page;
+  const getCurrentPage = (): 'new' | 'saved' | 'admin' => {
+    if (appState.page === 'practice') {
+      return 'saved';
+    }
+    return appState.page;
   };
 
   return (
     <>
       <AuthStatus />
-      <Navigation currentPage={getCurrentPage()} onPageChange={handlePageChange} />
+      <Navigation 
+        currentPage={getCurrentPage()} 
+        onPageChange={handlePageChange}
+        userRole={userRole}
+      />
       {renderCurrentView()}
     </>
   );

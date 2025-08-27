@@ -1,12 +1,13 @@
 import React from 'react';
-import { Home, BookOpen } from 'lucide-react';
+import { Home, BookOpen, Shield } from 'lucide-react';
 
 interface NavigationProps {
-  currentPage: 'new' | 'saved';
-  onPageChange: (page: 'new' | 'saved') => void;
+  currentPage: 'new' | 'saved' | 'admin';
+  onPageChange: (page: 'new' | 'saved' | 'admin') => void;
+  userRole: string | null;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) => {
+const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange, userRole }) => {
   return (
     <nav 
       className="fixed top-0 left-0 right-0 bg-white border-b-2 border-gray-200 z-50 shadow-sm" 
@@ -40,6 +41,21 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onPageChange }) =>
             <BookOpen size={20} />
             <span>Saved</span>
           </button>
+          
+          {userRole === 'admin' && (
+            <button
+              onClick={() => onPageChange('admin')}
+              className={`flex items-center space-x-2 px-6 py-2 rounded-lg font-medium transition-colors ${
+                currentPage === 'admin'
+                  ? 'bg-red-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              data-source-tsx="Navigation Admin Button|src/components/Navigation/Navigation.tsx"
+            >
+              <Shield size={20} />
+              <span>Admin Panel</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

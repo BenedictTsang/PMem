@@ -29,3 +29,5 @@ export interface AppContextType {
   currentContent: MemorizationState | null;
   setCurrentContent: (content: MemorizationState | null) => void;
 }
+
+export type AppPage = 'new' | 'saved' | 'admin';
