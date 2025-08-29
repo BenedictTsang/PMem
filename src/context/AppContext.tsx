@@ -16,7 +16,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const { data, error } = await supabase
           .from('saved_contents')
-          .select('id, title, originalText, selectedWordIndices, created_at')
+          .select('id, title, originalText, selectedWordIndices, created_at, is_published, public_id')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -28,8 +28,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             originalText: item.originalText,
             selectedWordIndices: item.selectedWordIndices,
             createdAt: new Date(item.created_at),
-            isPublished: false,
-            publicId: null,
+            isPublished: item.is_published || false,
+            publicId: item.public_id || null,
           }));
           setSavedContents(formattedData);
         }
@@ -51,6 +51,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           title: content.title,
           originalText: content.originalText,
           selectedWordIndices: content.selectedWordIndices,
+          is_published: false,
         }])
         .select()
         .single();
@@ -66,8 +67,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         originalText: data.originalText,
         selectedWordIndices: data.selectedWordIndices,
         createdAt: new Date(data.created_at),
-        isPublished: false,
-        publicId: null,
+        isPublished: data.is_published || false,
+        publicId: data.public_id || null,
       };
 
       setSavedContents(prev => [newContent, ...prev]);
@@ -98,9 +99,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const publishSavedContent = async (id: string): Promise<string | null> => {
     try {
-      // TODO: Implement after adding is_published and public_id columns to database
-      console.warn('Publishing feature requires database schema update');
-      return null;
+      const publicId = crypto.randomUUID();
+      
+      const { error } = await supabase
+        .from('saved_contents')
+        .update({ 
+          is_published: true, 
+          public_id: publicId 
+        })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error publishing content:', error);
+        return null;
+      }
+
+      // Update local state
+      setSavedContents(prev => 
+        prev.map(content => 
+          content.id === id 
+            ? { ...content, isPublished: true, publicId }
+            : content
+        )
+      );
+
+      return publicId;
     } catch (error) {
       console.error('Failed to publish content:', error);
       return null;
@@ -109,9 +132,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchPublicContent = async (publicId: string): Promise<MemorizationState | null> => {
     try {
-      // TODO: Implement after adding is_published and public_id columns to database
-      console.warn('Public content feature requires database schema update');
-      return null;
+      const { data, error } = await supabase
+        .from('saved_contents')
+        .select('originalText, selectedWordIndices')
+        .eq('public_id', publicId)
+        .eq('is_published', true)
+        .single();
+
+      if (error || !data) {
+        console.error('Error fetching public content:', error);
+        return null;
+      }
+
+      const words = processText(data.originalText);
+      const wordsWithSelection = words.map(word => ({
+        ...word,
+        isMemorized: data.selectedWordIndices.includes(word.index)
+      }));
+
+      return {
+        originalText: data.originalText,
+        words: wordsWithSelection,
+        selectedWordIndices: data.selectedWordIndices,
+        hiddenWords: new Set(data.selectedWordIndices),
+      };
     } catch (error) {
       console.error('Failed to fetch public content:', error);
       return null;
