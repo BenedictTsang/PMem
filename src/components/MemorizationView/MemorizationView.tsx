@@ -45,15 +45,10 @@ const MemorizationView: React.FC<MemorizationViewProps> = ({
 
   // 儲存目前內容
   const handleSave = async () => {
-    if (savedContents.length >= 30) {
-      alert('Maximum of 30 saved contents reached. Please delete some before saving new ones.');
-      return;
-    }
-
     setIsSaving(true);
     const title = originalText.substring(0, 50) + (originalText.length > 50 ? '...' : '');
     
-    const success = addSavedContent({
+    const success = await addSavedContent({
       title,
       originalText,
       selectedWordIndices: selectedIndices,
@@ -180,12 +175,6 @@ const MemorizationView: React.FC<MemorizationViewProps> = ({
           >
             <p data-source-tsx="MemorizationView Instructions Text|src/components/MemorizationView/MemorizationView.tsx">
               Click rectangles to reveal words • Click revealed words to hide them again
-            </p>
-            <p 
-              className="mt-1"
-              data-source-tsx="MemorizationView Save Count|src/components/MemorizationView/MemorizationView.tsx"
-            >
-              Saved contents: {savedContents.length}/30
             </p>
           </div>
         </div>

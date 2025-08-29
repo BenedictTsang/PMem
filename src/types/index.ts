@@ -24,10 +24,11 @@ export interface MemorizationState {
 
 export interface AppContextType {
   savedContents: SavedContent[];
-  addSavedContent: (content: Omit<SavedContent, 'id' | 'createdAt'>) => boolean;
-  deleteSavedContent: (id: string) => void;
+  addSavedContent: (content: Omit<SavedContent, 'id' | 'createdAt'>) => Promise<boolean>;
+  deleteSavedContent: (id: string) => Promise<void>;
   currentContent: MemorizationState | null;
   setCurrentContent: (content: MemorizationState | null) => void;
+  loading: boolean;
 }
 
 export type AppPage = 'new' | 'saved' | 'admin';

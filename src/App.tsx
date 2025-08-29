@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { AppProvider } from './context/AppContext';
-import SourceInspector from './components/SourceInspector/SourceInspector';
 import Navigation from './components/Navigation/Navigation';
 import TextInput from './components/TextInput/TextInput';
 import WordSelection from './components/WordSelection/WordSelection';
 import MemorizationView from './components/MemorizationView/MemorizationView';
 import SavedContent from './components/SavedContent/SavedContent';
+import SourceInspector from './components/SourceInspector/SourceInspector';
 import { Word, MemorizationState } from './types';
 
 type AppState = 

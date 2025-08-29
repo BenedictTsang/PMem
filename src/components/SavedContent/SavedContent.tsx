@@ -11,10 +11,13 @@ interface SavedContentProps {
 const SavedContent: React.FC<SavedContentProps> = ({ onLoadContent }) => {
   const { savedContents, deleteSavedContent } = useAppContext();
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (deleteConfirm === id) {
-      deleteSavedContent(id);
+      setDeletingId(id);
+      await deleteSavedContent(id);
+      setDeletingId(null);
       setDeleteConfirm(null);
     } else {
       setDeleteConfirm(id);
@@ -122,15 +125,24 @@ const SavedContent: React.FC<SavedContentProps> = ({ onLoadContent }) => {
                       
                       <button
                         onClick={() => handleDelete(content.id)}
+                        disabled={deletingId === content.id}
                         className={`flex items-center space-x-1 px-4 py-2 rounded-lg transition-colors ${
                           deleteConfirm === content.id
                             ? 'bg-red-600 text-white hover:bg-red-700'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        } ${deletingId === content.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                         }`}
                         data-source-tsx="SavedContent Delete Button|src/components/SavedContent/SavedContent.tsx"
                       >
                         <Trash2 size={16} />
-                        <span>{deleteConfirm === content.id ? 'Confirm?' : 'Delete'}</span>
+                        <span>
+                          {deletingId === content.id 
+                            ? 'Deleting...' 
+                            : deleteConfirm === content.id 
+                              ? 'Confirm?' 
+                              : 'Delete'
+                          }
+                        </span>
                       </button>
                     </div>
                   </div>
