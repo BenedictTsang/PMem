@@ -131,7 +131,6 @@ const SavedContent: React.FC<SavedContentProps> = ({ onLoadContent }) => {
                             ? 'bg-red-600 text-white hover:bg-red-700'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         } ${deletingId === content.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        }`}
                         data-source-tsx="SavedContent Delete Button|src/components/SavedContent/SavedContent.tsx"
                       >
                         <Trash2 size={16} />
