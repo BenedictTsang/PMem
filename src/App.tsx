@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider } from './context/AppContext';
+import { useAppContext } from './context/AppContext';
 import Navigation from './components/Navigation/Navigation';
 import TextInput from './components/TextInput/TextInput';
 import WordSelection from './components/WordSelection/WordSelection';
@@ -13,12 +14,49 @@ type AppState =
   | { page: 'new'; step: 'selection'; text: string; words?: Word[] }
   | { page: 'new'; step: 'memorization'; words: Word[]; selectedIndices: number[]; text: string }
   | { page: 'saved' }
-  | { page: 'practice'; memorizationState: MemorizationState };
+  | { page: 'practice'; memorizationState: MemorizationState }
+  | { page: 'publicPractice'; memorizationState: MemorizationState };
 
 function AppContent() {
   const [appState, setAppState] = useState<AppState>({ page: 'new', step: 'input' });
+  const { fetchPublicContent } = useAppContext();
+
+  // Handle hash-based routing for public links
+  useEffect(() => {
+    const handleHashChange = async () => {
+      const hash = window.location.hash;
+      const publicMatch = hash.match(/^#\/public\/(.+)$/);
+      
+      if (publicMatch) {
+        const publicId = publicMatch[1];
+        const publicContent = await fetchPublicContent(publicId);
+        
+        if (publicContent) {
+          setAppState({ page: 'publicPractice', memorizationState: publicContent });
+        } else {
+          // Content not found, redirect to home
+          window.location.hash = '';
+          setAppState({ page: 'new', step: 'input' });
+          alert('The requested practice content was not found or is no longer available.');
+        }
+      }
+    };
+
+    // Check hash on mount
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [fetchPublicContent]);
 
   const handlePageChange = (page: 'new' | 'saved') => {
+    // Clear hash when navigating normally
+    window.location.hash = '';
+    
     if (page === 'new') {
       setAppState({ page: 'new', step: 'input' });
     } else if (page === 'saved') {
@@ -107,11 +145,25 @@ function AppContent() {
             onSave={() => {}}
           />
         );
+      case 'publicPractice':
+        return (
+          <MemorizationView
+            words={appState.memorizationState.words}
+            selectedIndices={appState.memorizationState.selectedWordIndices}
+            originalText={appState.memorizationState.originalText}
+            onBack={() => {
+              window.location.hash = '';
+              setAppState({ page: 'new', step: 'input' });
+            }}
+            onSave={() => {}}
+            isPublicView={true}
+          />
+        );
     }
   };
 
   const getCurrentPage = (): 'new' | 'saved' => {
-    if (appState.page === 'practice') {
+    if (appState.page === 'practice' || appState.page === 'publicPractice') {
       return 'saved';
     }
     return appState.page;

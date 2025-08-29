@@ -10,10 +10,11 @@ interface MemorizationViewProps {
   originalText: string;
   onBack: () => void;
   onSave: () => void;
+  isPublicView?: boolean;
 }
 
 const MemorizationView: React.FC<MemorizationViewProps> = ({ 
-  words, selectedIndices, originalText, onBack, onSave 
+  words, selectedIndices, originalText, onBack, onSave, isPublicView = false
 }) => {
   const [hiddenWords, setHiddenWords] = useState<Set<number>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
@@ -155,18 +156,20 @@ const MemorizationView: React.FC<MemorizationViewProps> = ({
               data-source-tsx="MemorizationView Back Button|src/components/MemorizationView/MemorizationView.tsx"
             >
               <ArrowLeft size={20} />
-              <span>Back</span>
+              <span>{isPublicView ? 'Home' : 'Back'}</span>
             </button>
             
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center space-x-2 px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              data-source-tsx="MemorizationView Save Button|src/components/MemorizationView/MemorizationView.tsx"
-            >
-              <Save size={20} />
-              <span>{isSaving ? 'Saving...' : 'Save'}</span>
-            </button>
+            {!isPublicView && (
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center space-x-2 px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                data-source-tsx="MemorizationView Save Button|src/components/MemorizationView/MemorizationView.tsx"
+              >
+                <Save size={20} />
+                <span>{isSaving ? 'Saving...' : 'Save'}</span>
+              </button>
+            )}
           </div>
           
           <div 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppContextType, SavedContent, MemorizationState } from '../types';
 import { supabase } from '../lib/supabase';
+import { processText } from '../utils/textProcessor';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -15,7 +16,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const { data, error } = await supabase
           .from('saved_contents')
-          .select('*')
+          .select('id, title, originalText, selectedWordIndices, created_at, is_published, public_id')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -27,6 +28,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             originalText: item.originalText,
             selectedWordIndices: item.selectedWordIndices,
             createdAt: new Date(item.created_at),
+            isPublished: item.is_published || false,
+            publicId: item.public_id,
           }));
           setSavedContents(formattedData);
         }
@@ -48,6 +51,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           title: content.title,
           originalText: content.originalText,
           selectedWordIndices: content.selectedWordIndices,
+          is_published: false,
         }])
         .select()
         .single();
@@ -63,6 +67,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         originalText: data.originalText,
         selectedWordIndices: data.selectedWordIndices,
         createdAt: new Date(data.created_at),
+        isPublished: data.is_published || false,
+        publicId: data.public_id,
       };
 
       setSavedContents(prev => [newContent, ...prev]);
@@ -91,10 +97,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const publishSavedContent = async (id: string): Promise<string | null> => {
+    try {
+      const publicId = crypto.randomUUID();
+      
+      const { data, error } = await supabase
+        .from('saved_contents')
+        .update({
+          is_published: true,
+          public_id: publicId,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error publishing content:', error);
+        return null;
+      }
+
+      // Update local state
+      setSavedContents(prev => prev.map(content => 
+        content.id === id 
+          ? { ...content, isPublished: true, publicId }
+          : content
+      ));
+
+      return publicId;
+    } catch (error) {
+      console.error('Failed to publish content:', error);
+      return null;
+    }
+  };
+
+  const fetchPublicContent = async (publicId: string): Promise<MemorizationState | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_contents')
+        .select('*')
+        .eq('public_id', publicId)
+        .eq('is_published', true)
+        .single();
+
+      if (error || !data) {
+        console.error('Error fetching public content:', error);
+        return null;
+      }
+
+      const words = processText(data.originalText);
+      const wordsWithSelection = words.map(word => ({
+        ...word,
+        isMemorized: data.selectedWordIndices.includes(word.index)
+      }));
+
+      return {
+        originalText: data.originalText,
+        words: wordsWithSelection,
+        selectedWordIndices: data.selectedWordIndices,
+        hiddenWords: new Set(data.selectedWordIndices),
+      };
+    } catch (error) {
+      console.error('Failed to fetch public content:', error);
+      return null;
+    }
+  };
+
   const value: AppContextType = {
     savedContents,
     addSavedContent,
     deleteSavedContent,
+    publishSavedContent,
+    fetchPublicContent,
     currentContent,
     setCurrentContent,
     loading,

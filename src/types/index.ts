@@ -4,6 +4,8 @@ export interface SavedContent {
   originalText: string;
   selectedWordIndices: number[];
   createdAt: Date;
+  isPublished: boolean;
+  publicId?: string | null;
 }
 
 export interface Word {
@@ -26,9 +28,11 @@ export interface AppContextType {
   savedContents: SavedContent[];
   addSavedContent: (content: Omit<SavedContent, 'id' | 'createdAt'>) => Promise<boolean>;
   deleteSavedContent: (id: string) => Promise<void>;
+  publishSavedContent: (id: string) => Promise<string | null>;
+  fetchPublicContent: (publicId: string) => Promise<MemorizationState | null>;
   currentContent: MemorizationState | null;
   setCurrentContent: (content: MemorizationState | null) => void;
   loading: boolean;
 }
 
-export type AppPage = 'new' | 'saved' | 'admin';
+export type AppPage = 'new' | 'saved' | 'admin' | 'publicPractice';
