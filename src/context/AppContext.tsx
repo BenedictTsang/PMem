@@ -16,7 +16,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const { data, error } = await supabase
           .from('saved_contents')
           .select('*')
-          .order('createdAt', { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error fetching saved contents:', error);
@@ -26,7 +26,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             title: item.title,
             originalText: item.originalText,
             selectedWordIndices: item.selectedWordIndices,
-            createdAt: new Date(item.createdAt),
+            createdAt: new Date(item.created_at),
           }));
           setSavedContents(formattedData);
         }
@@ -62,7 +62,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: data.title,
         originalText: data.originalText,
         selectedWordIndices: data.selectedWordIndices,
-        createdAt: new Date(data.createdAt),
+        createdAt: new Date(data.created_at),
       };
 
       setSavedContents(prev => [newContent, ...prev]);
