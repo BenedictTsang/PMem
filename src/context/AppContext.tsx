@@ -16,7 +16,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const { data, error } = await supabase
           .from('saved_contents')
-          .select('id, title, originalText, selectedWordIndices, created_at, is_published, public_id')
+          .select('id, title, originalText, selectedWordIndices, created_at')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -28,8 +28,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             originalText: item.originalText,
             selectedWordIndices: item.selectedWordIndices,
             createdAt: new Date(item.created_at),
-            isPublished: item.is_published || false,
-            publicId: item.public_id,
+            isPublished: false,
+            publicId: null,
           }));
           setSavedContents(formattedData);
         }
@@ -51,7 +51,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           title: content.title,
           originalText: content.originalText,
           selectedWordIndices: content.selectedWordIndices,
-          is_published: false,
         }])
         .select()
         .single();
@@ -67,8 +66,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         originalText: data.originalText,
         selectedWordIndices: data.selectedWordIndices,
         createdAt: new Date(data.created_at),
-        isPublished: data.is_published || false,
-        publicId: data.public_id,
+        isPublished: false,
+        publicId: null,
       };
 
       setSavedContents(prev => [newContent, ...prev]);
@@ -99,31 +98,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const publishSavedContent = async (id: string): Promise<string | null> => {
     try {
-      const publicId = crypto.randomUUID();
-      
-      const { data, error } = await supabase
-        .from('saved_contents')
-        .update({
-          is_published: true,
-          public_id: publicId,
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error publishing content:', error);
-        return null;
-      }
-
-      // Update local state
-      setSavedContents(prev => prev.map(content => 
-        content.id === id 
-          ? { ...content, isPublished: true, publicId }
-          : content
-      ));
-
-      return publicId;
+      // TODO: Implement after adding is_published and public_id columns to database
+      console.warn('Publishing feature requires database schema update');
+      return null;
     } catch (error) {
       console.error('Failed to publish content:', error);
       return null;
@@ -132,30 +109,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchPublicContent = async (publicId: string): Promise<MemorizationState | null> => {
     try {
-      const { data, error } = await supabase
-        .from('saved_contents')
-        .select('*')
-        .eq('public_id', publicId)
-        .eq('is_published', true)
-        .single();
-
-      if (error || !data) {
-        console.error('Error fetching public content:', error);
-        return null;
-      }
-
-      const words = processText(data.originalText);
-      const wordsWithSelection = words.map(word => ({
-        ...word,
-        isMemorized: data.selectedWordIndices.includes(word.index)
-      }));
-
-      return {
-        originalText: data.originalText,
-        words: wordsWithSelection,
-        selectedWordIndices: data.selectedWordIndices,
-        hiddenWords: new Set(data.selectedWordIndices),
-      };
+      // TODO: Implement after adding is_published and public_id columns to database
+      console.warn('Public content feature requires database schema update');
+      return null;
     } catch (error) {
       console.error('Failed to fetch public content:', error);
       return null;
